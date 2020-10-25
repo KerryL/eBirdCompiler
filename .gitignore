@@ -1,0 +1,29 @@
+# Ignore MSVC++ binary and object directories
+Debug/
+Release/
+ipch/
+*.opendb
+*.db
+
+*.log
+*.csv
+
+*.suo
+*.sdf
+*.opensdf
+*.bak
+*.swp
+*.rc
+*.html
+
+!res/*.rc
+
+*.config
+
+# Ignore GKT directories
+bin/
+.obj/
+
+# Ignore automatically generated files
+gitHash.cpp
+version.cpp
