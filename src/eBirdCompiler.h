@@ -10,6 +10,9 @@
 #include <string>
 #include <vector>
 
+// Local forward declarations
+struct ChecklistInfo;
+
 struct SpeciesInfo
 {
 	std::string name;
@@ -43,6 +46,8 @@ private:
 	};
 	
 	SummaryInfo summary;
+	
+	static unsigned int GetDateCode(const ChecklistInfo& info);
 };
 
 #endif// EBIRD_COMPILER_H_

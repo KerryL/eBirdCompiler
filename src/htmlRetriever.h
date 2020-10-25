@@ -27,6 +27,7 @@ public:
 protected:
 	const std::string userAgent;
 	static const bool verbose;
+	static const std::string cookieFile;
 	
 	ThrottledSection rateLimiter;
 	

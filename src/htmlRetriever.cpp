@@ -10,7 +10,8 @@
 #include <iostream>
 #include <cassert>
 
-const bool HTMLRetriever::verbose(true);
+const bool HTMLRetriever::verbose(false);
+const std::string HTMLRetriever::cookieFile("cookies");
 
 HTMLRetriever::HTMLRetriever(const std::string& userAgent, const std::chrono::steady_clock::duration& crawlDelay) : userAgent(userAgent), rateLimiter(crawlDelay)
 {
@@ -67,11 +68,12 @@ bool HTMLRetriever::DoGeneralCurlConfiguration()
 	if (CURLCallHasError(curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headerList), "Failed to set header"))
 		return false;
 
-	/*if (CURLCallHasError(curl_easy_setopt(curl, CURLOPT_COOKIEFILE, cookieFile.c_str()), _Failed to load the cookie file"))
+	// eBird requires cookies for following redirects, which are used for checklists
+	if (CURLCallHasError(curl_easy_setopt(curl, CURLOPT_COOKIEFILE, cookieFile.c_str()), "Failed to load the cookie file"))
 		return false;
 
 	if (CURLCallHasError(curl_easy_setopt(curl, CURLOPT_COOKIEJAR, cookieFile.c_str()), "Failed to enable saving cookies"))
-		return false;*/
+		return false;
 
 	if (CURLCallHasError(curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, HTMLRetriever::CURLWriteCallback), "Failed to set the write callback"))
 		return false;

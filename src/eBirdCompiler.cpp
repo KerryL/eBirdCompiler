@@ -14,6 +14,7 @@
 #include <iomanip>
 #include <set>
 #include <algorithm>
+#include <cassert>
 
 const std::string EBirdCompiler::userAgent("eBird Compiler");
 
@@ -22,11 +23,11 @@ bool EBirdCompiler::Update(const std::string& checklistString)
 	errorString.clear();
 	summary = SummaryInfo();
 	
-	std::vector<std::string> urlList;
+	std::set<std::string> urlList;
 	std::string url;
 	std::istringstream ss(checklistString);
 	while (std::getline(ss, url))
-		urlList.push_back(url);
+		urlList.insert(url);
 		
 	if (urlList.empty())
 	{
@@ -34,7 +35,7 @@ bool EBirdCompiler::Update(const std::string& checklistString)
 		return false;
 	}
 	
-	const auto baseURL(RobotsParser::GetBaseURL(urlList.front()));
+	const auto baseURL(RobotsParser::GetBaseURL(*urlList.begin()));
 	RobotsParser robotsTxtParser(userAgent, baseURL);
 	std::chrono::steady_clock::duration crawlDelay;
 	if (robotsTxtParser.RetrieveRobotsTxt())
@@ -64,10 +65,15 @@ bool EBirdCompiler::Update(const std::string& checklistString)
 
 	std::set<std::string> locationSet;
 	unsigned int anonUserCount(0);
+	const auto dateCode(GetDateCode(checklistInfo.front()));
+	bool allSameDate(true);
 	for (const auto& ci : checklistInfo)
 	{
 		summary.totalDistance += ci.distance;
 		summary.totalTime += ci.duration;
+		
+		if (GetDateCode(ci) != dateCode)
+			allSameDate = false;// TODO:  Currently provides no feedback to the user
 		
 		for (const auto& b : ci.birders)
 		{
@@ -102,9 +108,7 @@ bool EBirdCompiler::Update(const std::string& checklistString)
 	summary.locationCount = locationSet.size();
 	
 	// Need to decide if we should store info from each checklist separately, so we only need to re-parse pages for which URLs were added (and remove stored data for URLs that were removed), or if we should re-parse everything each time.  What happens if the URL didn't change but the checklist was updated?
-	// Should add a warning if all checklists are not from same date.  If there are many checklists and only a small number are from a different date, identify those checklists.
-	// Should this be threaded?  Need to have rate limiter and robots.txt reader (with or without threading)?
-	// TODO:  Warn if dates don't match
+	// If there are many checklists and only a small number are from a different date, identify those checklists.
 	
 	return true;
 }
@@ -137,4 +141,12 @@ std::string EBirdCompiler::GetSummaryString() const
 		ss << "    " << s.name << std::setw(maxNameLength + 2 - s.name.length()) << std::setfill(' ') << s.count << '\n';
 	
 	return ss.str();
+}
+
+unsigned int EBirdCompiler::GetDateCode(const ChecklistInfo& info)
+{
+	assert(info.month > 0 && info.month <= 12);
+	assert(info.day > 0 && info.day <= 31);
+	assert(info.year > 1700);
+	return (info.year - 1700) + info.month * 1000 + info.day * 100000;
 }
