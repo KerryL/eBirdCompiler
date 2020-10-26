@@ -30,9 +30,30 @@ struct ChecklistInfo
 class EBirdChecklistParser
 {
 public:
-	static bool Parse(const std::string& html, ChecklistInfo& info);
+	bool Parse(const std::string& html, ChecklistInfo& info);
+	std::string GetErrorString() const { return errorString; }
 	
 private:
+	std::string errorString;
+	
+	enum class Protocol
+	{
+		Traveling,
+		Stationary,
+		Incidential,
+		Other
+	};
+	
+	bool ExtractDate(const std::string& html, std::string::size_type& position, ChecklistInfo& info);
+	bool ExtractLocation(const std::string& html, std::string::size_type& position, std::string& location);
+	bool ExtractBirders(const std::string& html, std::string::size_type& position, std::vector<std::string>& birders);
+	bool ExtractProtocol(const std::string& html, std::string::size_type& position, Protocol& protocol);
+	bool ExtractDuration(const std::string& html, std::string::size_type& position, double& duration);
+	bool ExtractDistance(const std::string& html, std::string::size_type& position, double& distance);
+	bool ExtractSpeciesList(const std::string& html, std::string::size_type& position, std::vector<SpeciesInfo>& species);
+	bool ExtractSpeciesInfo(const std::string& html, std::string::size_type& position, SpeciesInfo& info, const std::string::size_type& maxPosition);
+	
+	static bool ExtractTextBetweenTags(const std::string& html, const std::string& startTag, const std::string& endTag, std::string& token, std::string::size_type& position, const std::string::size_type& maxPosition = std::string::npos);
 };
 
 #endif// EBIRD_CHECKLIST_PARSER_H_

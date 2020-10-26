@@ -55,10 +55,10 @@ bool EBirdCompiler::Update(const std::string& checklistString)
 		}
 		
 		checklistInfo.push_back(ChecklistInfo());
-		if (!EBirdChecklistParser::Parse(html, checklistInfo.back()))
+		EBirdChecklistParser parser;
+		if (!parser.Parse(html, checklistInfo.back()))
 		{
-			// TODO:  Set error string to something more meaningful
-			errorString = "Failed to parse checklist";
+			errorString = parser.GetErrorString();
 			return false;
 		}
 	}
