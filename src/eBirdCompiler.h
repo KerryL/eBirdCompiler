@@ -30,6 +30,7 @@ public:
 
 private:
 	static const std::string userAgent;
+	static const std::string taxonFileName;
 
 	std::string errorString;
 	std::vector<std::string> checklistURLs;
@@ -48,6 +49,10 @@ private:
 	SummaryInfo summary;
 	
 	static unsigned int GetDateCode(const ChecklistInfo& info);
+	static void CountSpecies(const std::vector<SpeciesInfo>& species, unsigned int& speciesCount, unsigned int& otherTaxaCount);
+	static std::string StripSubspecies(const std::string& name);
+	static bool IsSpuhOrSlash(const std::string& name);
+	static void SortTaxonomically(std::vector<SpeciesInfo>& species);
 };
 
 #endif// EBIRD_COMPILER_H_

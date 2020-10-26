@@ -10,6 +10,13 @@
 #include <iostream>
 #include <cassert>
 
+//#define SAVE_TEST_FILE
+//#define LOAD_TEST_FILE
+#if defined(SAVE_TEST_FILE) || defined(LOAD_TEST_FILE)
+#include <fstream>
+const std::string testFileName("test.html");
+#endif
+
 const bool HTMLRetriever::verbose(false);
 const std::string HTMLRetriever::cookieFile("cookies");
 
@@ -29,7 +36,28 @@ HTMLRetriever::~HTMLRetriever()
 	
 bool HTMLRetriever::GetHTML(const std::string& url, std::string& html)
 {
+#ifdef SAVE_TEST_FILE
+	bool ok(DoCURLGet(url, html));
+	if (!ok)
+		return false;
+	std::ofstream f(testFileName);
+	if (!f.good())
+		return false;
+	f << html;
+	return true;
+#elif defined(LOAD_TEST_FILE)
+	std::ifstream f(testFileName, std::ios::ate);
+	if (!f.good())
+		return false;
+
+	html.reserve(f.tellg());
+	f.seekg(0, std::ios::beg);
+
+	html.assign((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+	return true;
+#else
 	return DoCURLGet(url, html);
+#endif// LOAD_TEST_FILE
 }
 
 bool HTMLRetriever::DoGeneralCurlConfiguration()

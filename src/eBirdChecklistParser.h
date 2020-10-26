@@ -13,6 +13,9 @@
 #include <vector>
 #include <string>
 
+// Local forward declarations
+class TaxonomyOrder;
+
 struct ChecklistInfo
 {
 	std::vector<std::string> birders;
@@ -30,11 +33,15 @@ struct ChecklistInfo
 class EBirdChecklistParser
 {
 public:
+	EBirdChecklistParser(TaxonomyOrder& taxonomy) : taxonomy(taxonomy) {}
+	
 	bool Parse(const std::string& html, ChecklistInfo& info);
 	std::string GetErrorString() const { return errorString; }
 	
 private:
 	std::string errorString;
+
+	TaxonomyOrder& taxonomy;
 	
 	enum class Protocol
 	{
@@ -54,6 +61,9 @@ private:
 	bool ExtractSpeciesInfo(const std::string& html, std::string::size_type& position, SpeciesInfo& info, const std::string::size_type& maxPosition);
 	
 	static bool ExtractTextBetweenTags(const std::string& html, const std::string& startTag, const std::string& endTag, std::string& token, std::string::size_type& position, const std::string::size_type& maxPosition = std::string::npos);
+	static bool MoveToEndOfTag(const std::string& html, const std::string& tag, std::string::size_type& position, const std::string::size_type& maxPosition = std::string::npos);
+	
+	static std::vector<SpeciesInfo> MergeLists(const std::vector<std::vector<SpeciesInfo>>& lists);
 };
 
 #endif// EBIRD_CHECKLIST_PARSER_H_

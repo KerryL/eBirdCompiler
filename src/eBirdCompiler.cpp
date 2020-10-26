@@ -8,6 +8,7 @@
 #include "eBirdChecklistParser.h"
 #include "htmlRetriever.h"
 #include "robotsParser.h"
+#include "taxonomyOrder.h"
 
 // Standard C++ headers
 #include <sstream>
@@ -15,8 +16,10 @@
 #include <set>
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 
 const std::string EBirdCompiler::userAgent("eBird Compiler");
+const std::string EBirdCompiler::taxonFileName("eBird_Taxonomy_v2019.csv");
 
 bool EBirdCompiler::Update(const std::string& checklistString)
 {
@@ -35,6 +38,13 @@ bool EBirdCompiler::Update(const std::string& checklistString)
 		return false;
 	}
 	
+	TaxonomyOrder taxonomicOrder;
+	if (!taxonomicOrder.Parse(taxonFileName))
+	{
+		errorString = taxonomicOrder.GetErrorString();
+		return false;
+	}
+	
 	const auto baseURL(RobotsParser::GetBaseURL(*urlList.begin()));
 	RobotsParser robotsTxtParser(userAgent, baseURL);
 	std::chrono::steady_clock::duration crawlDelay;
@@ -42,7 +52,7 @@ bool EBirdCompiler::Update(const std::string& checklistString)
 		crawlDelay = robotsTxtParser.GetCrawlDelay();
 	else
 		crawlDelay = std::chrono::seconds(1);// Default value
-
+	
 	HTMLRetriever htmlClient(userAgent, crawlDelay);
 	std::vector<ChecklistInfo> checklistInfo;
 	for (const auto& u : urlList)
@@ -55,7 +65,7 @@ bool EBirdCompiler::Update(const std::string& checklistString)
 		}
 		
 		checklistInfo.push_back(ChecklistInfo());
-		EBirdChecklistParser parser;
+		EBirdChecklistParser parser(taxonomicOrder);
 		if (!parser.Parse(html, checklistInfo.back()))
 		{
 			errorString = parser.GetErrorString();
@@ -104,6 +114,8 @@ bool EBirdCompiler::Update(const std::string& checklistString)
 		}
 	}
 	
+	SortTaxonomically(summary.species);
+	
 	summary.includesMoreThanOneAnonymousUser = anonUserCount > 1;
 	summary.locationCount = locationSet.size();
 	
@@ -119,26 +131,49 @@ std::string EBirdCompiler::GetSummaryString() const
 	for (const auto& s : summary.species)
 		totalIndividuals += s.count;
 		
+	const unsigned int timeHour(floor(summary.totalTime / 60.0));
+	const unsigned int timeMin(summary.totalTime - timeHour * 60.0);
+		
 	std::ostringstream ss;
 	ss << "Summary of observations:"
-		<< "\n  Participants:     " << summary.participants.size();
+		<< "\n  Participants:    " << summary.participants.size();
 	if (summary.includesMoreThanOneAnonymousUser)
 		ss << " (participant count may be inexact due to anonymous checklists)";
 	ss << "\n  Total distance:  " << summary.totalDistance * 0.621371 << " miles"
-		<< "\n  Total time:      " << summary.totalTime << " min"
-		<< "\n  # Locations:     " << summary.locationCount
-		<< "\n  # Species:       " << summary.species.size()
-		<< "\n  # Individuals:   " << totalIndividuals << "\n\n";
+		<< "\n  Total time:      ";
+	if (timeHour > 0)
+	{
+		ss << timeHour << " hr";
+		if (timeMin > 0)
+			ss << ", " << timeMin << " min";
+	}
+	else
+		ss << timeMin << " min";
 		
-	// TODO:  Sort list by taxonmic order
+	unsigned int speciesCount, otherTaxaCount;
+	CountSpecies(summary.species, speciesCount, otherTaxaCount);
+	ss<< "\n  # Locations:     " << summary.locationCount
+		<< "\n  # Species:       " << speciesCount;
+	if (otherTaxaCount > 0)
+		ss << " (+ " << otherTaxaCount << " other taxa.)";
+	ss << "\n  # Individuals:   " << totalIndividuals << "\n\n";
 	
 	std::string::size_type maxNameLength(0);
 	for (const auto& s : summary.species)
 		maxNameLength = std::max(maxNameLength, s.name.length());
 		
+	const unsigned int extraSpace(7);// Extra space must be longer than max expected count size (TODO:  Automate this)
 	ss << "  Species list:\n";
+	// TODO:  When we print the final list, should we remove subspecies info again?
 	for (const auto& s : summary.species)
-		ss << "    " << s.name << std::setw(maxNameLength + 2 - s.name.length()) << std::setfill(' ') << s.count << '\n';
+	{
+		ss << "    " << s.name << std::setw(maxNameLength + extraSpace - s.name.length()) << std::setfill(' ');
+		if (s.count == 0)
+			ss << 'X';
+		else
+			ss << s.count;
+		ss << '\n';
+	}
 	
 	return ss.str();
 }
@@ -149,4 +184,52 @@ unsigned int EBirdCompiler::GetDateCode(const ChecklistInfo& info)
 	assert(info.day > 0 && info.day <= 31);
 	assert(info.year > 1700);
 	return (info.year - 1700) + info.month * 1000 + info.day * 100000;
+}
+
+void EBirdCompiler::CountSpecies(const std::vector<SpeciesInfo>& species, unsigned int& speciesCount, unsigned int& otherTaxaCount)
+{
+	std::set<std::string> fullSpecies;
+	std::set<std::string> otherTaxa;
+	
+	for (const auto& s : species)
+	{
+		const auto cleanedName(StripSubspecies(s.name));
+		if (IsSpuhOrSlash(cleanedName))
+			otherTaxa.insert(cleanedName);
+		else
+			fullSpecies.insert(cleanedName);
+	}
+	
+	speciesCount = fullSpecies.size();
+	otherTaxaCount = otherTaxa.size();
+}
+
+std::string EBirdCompiler::StripSubspecies(const std::string& name)
+{
+	const auto parenStart(name.find('('));
+	if (parenStart == std::string::npos)
+		return name;
+		
+	return name.substr(0, parenStart - 1);
+}
+
+bool EBirdCompiler::IsSpuhOrSlash(const std::string& name)
+{
+	const std::string spuh("sp.");
+	if (name.find(spuh) != std::string::npos)
+		return true;
+	else if (name.find('/') != std::string::npos)
+		return true;
+		
+	return false;
+}
+
+void EBirdCompiler::SortTaxonomically(std::vector<SpeciesInfo>& species)
+{
+	auto sortPredicate([](const SpeciesInfo& a, const SpeciesInfo& b)
+	{
+		return a.taxonomicOrder < b.taxonomicOrder;
+	});
+	
+	std::sort(species.begin(), species.end(), sortPredicate);
 }

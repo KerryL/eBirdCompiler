@@ -19,6 +19,7 @@ ipch/
 !res/*.rc
 
 *.config
+cookies
 
 # Ignore GKT directories
 bin/

@@ -38,7 +38,7 @@ void MainFrame::CreateControls()
 	mainSizer->Add(new wxStaticText(panel, wxID_ANY, _T("Enter checklist URLs:")), wxSizerFlags().Border(wxALL, 5));
 	mainSizer->Add(checklistTextBox, wxSizerFlags().Expand().Border(wxALL, 5));
 	mainSizer->Add(updateButton, wxSizerFlags().Border(wxALL, 5).Border(wxALL, 5));
-	mainSizer->Add(new wxStaticText(panel, wxID_ANY, _T("Summary of Observations:")), wxSizerFlags().Border(wxALL, 5));
+	mainSizer->Add(new wxStaticText(panel, wxID_ANY, _T("Summary of observations:")), wxSizerFlags().Border(wxALL, 5));
 	mainSizer->Add(summaryTextBox, wxSizerFlags(1).Expand().Border(wxALL, 5));
 	
 	SetSizerAndFit(topSizer);
