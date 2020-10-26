@@ -121,8 +121,7 @@ bool EBirdCompiler::Update(const std::string& checklistString)
 	
 	if (!allSameDate)
 		errorString = "Not all checklists are from the same date";
-	
-	// Need to decide if we should store info from each checklist separately, so we only need to re-parse pages for which URLs were added (and remove stored data for URLs that were removed), or if we should re-parse everything each time.  What happens if the URL didn't change but the checklist was updated?
+
 	// If there are many checklists and only a small number are from a different date, identify those checklists.
 	
 	return true;
@@ -138,12 +137,11 @@ std::string EBirdCompiler::GetSummaryString() const
 	const unsigned int timeMin(summary.totalTime - timeHour * 60.0);
 		
 	std::ostringstream ss;
-	ss << "Summary of observations:"
-		<< "\n  Participants:    " << summary.participants.size();
+	ss << "\nParticipants:    " << summary.participants.size();
 	if (summary.includesMoreThanOneAnonymousUser)
 		ss << " (participant count may be inexact due to anonymous checklists)";
-	ss << "\n  Total distance:  " << summary.totalDistance * 0.621371 << " miles"
-		<< "\n  Total time:      ";
+	ss << "\nTotal distance:  " << summary.totalDistance * 0.621371 << " miles"
+		<< "\nTotal time:      ";
 	if (timeHour > 0)
 	{
 		ss << timeHour << " hr";
@@ -155,22 +153,22 @@ std::string EBirdCompiler::GetSummaryString() const
 		
 	unsigned int speciesCount, otherTaxaCount;
 	CountSpecies(summary.species, speciesCount, otherTaxaCount);
-	ss<< "\n  # Locations:     " << summary.locationCount
-		<< "\n  # Species:       " << speciesCount;
+	ss<< "\n# Locations:     " << summary.locationCount
+		<< "\n# Species:       " << speciesCount;
 	if (otherTaxaCount > 0)
 		ss << " (+ " << otherTaxaCount << " other taxa.)";
-	ss << "\n  # Individuals:   " << totalIndividuals << "\n\n";
+	ss << "\n# Individuals:   " << totalIndividuals << "\n\n";
 	
 	std::string::size_type maxNameLength(0);
 	for (const auto& s : summary.species)
 		maxNameLength = std::max(maxNameLength, s.name.length());
 		
 	const unsigned int extraSpace(7);// Extra space must be longer than max expected count size (TODO:  Automate this)
-	ss << "  Species list:\n";
+	ss << "Species list:\n";
 	// TODO:  When we print the final list, should we remove subspecies info again?
 	for (const auto& s : summary.species)
 	{
-		ss << "    " << s.name << std::setw(maxNameLength + extraSpace - s.name.length()) << std::setfill(' ');
+		ss << "  " << s.name << std::setw(maxNameLength + extraSpace - s.name.length()) << std::setfill(' ');
 		if (s.count == 0)
 			ss << 'X';
 		else
