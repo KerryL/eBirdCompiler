@@ -72,7 +72,11 @@ void MainFrame::ButtonUpdateClickedEvent(wxCommandEvent& WXUNUSED(event))
 	if (!compiler.Update(checklistTextBox->GetValue().ToStdString()))
 		wxMessageBox(compiler.GetErrorString(), _T("Error"));
 	else
+	{
 		summaryTextBox->SetValue(compiler.GetSummaryString());
+		if (!compiler.GetErrorString().empty())
+			wxMessageBox(compiler.GetErrorString(), _T("Warning"));
+	}
 		
 	updateButton->Enable(false);
 }

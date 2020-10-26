@@ -83,7 +83,7 @@ bool EBirdCompiler::Update(const std::string& checklistString)
 		summary.totalTime += ci.duration;
 		
 		if (GetDateCode(ci) != dateCode)
-			allSameDate = false;// TODO:  Currently provides no feedback to the user
+			allSameDate = false;
 		
 		for (const auto& b : ci.birders)
 		{
@@ -118,6 +118,9 @@ bool EBirdCompiler::Update(const std::string& checklistString)
 	
 	summary.includesMoreThanOneAnonymousUser = anonUserCount > 1;
 	summary.locationCount = locationSet.size();
+	
+	if (!allSameDate)
+		errorString = "Not all checklists are from the same date";
 	
 	// Need to decide if we should store info from each checklist separately, so we only need to re-parse pages for which URLs were added (and remove stored data for URLs that were removed), or if we should re-parse everything each time.  What happens if the URL didn't change but the checklist was updated?
 	// If there are many checklists and only a small number are from a different date, identify those checklists.
