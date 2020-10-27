@@ -16,6 +16,7 @@
 class TaxonomyOrder
 {
 public:
+	explicit TaxonomyOrder(const std::string& userAgent) : userAgent(userAgent) {}
 	bool Parse(const std::string& fileName);
 	
 	bool GetTaxonomicSequence(const std::string& commonName, unsigned int& sequence) const;
@@ -23,6 +24,9 @@ public:
 	std::string GetErrorString() const { return errorString; }
 
 private:
+	static const std::string taxonomyFileURL;
+	const std::string userAgent;
+	
 	std::string errorString;
 
 	struct TaxaInfo
@@ -48,6 +52,8 @@ private:
 	bool ParseToken(const std::string& s, std::string& value);
 	
 	static void Trim(std::string& s);
+	
+	bool DownloadTaxonomyFile(const std::string& saveTo);
 };
 
 template <typename T>

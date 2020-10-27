@@ -38,7 +38,7 @@ bool EBirdCompiler::Update(const std::string& checklistString)
 		return false;
 	}
 	
-	TaxonomyOrder taxonomicOrder;
+	TaxonomyOrder taxonomicOrder(userAgent);
 	if (!taxonomicOrder.Parse(taxonFileName))
 	{
 		errorString = taxonomicOrder.GetErrorString();

@@ -7,13 +7,26 @@
 
 // Local headers
 #include "taxonomyOrder.h"
+#include "htmlRetriever.h"
 
 // Standard C++ headers
 #include <fstream>
 #include <algorithm>
+#include <filesystem>
+
+const std::string TaxonomyOrder::taxonomyFileURL("https://www.birds.cornell.edu/clementschecklist/wp-content/uploads/2019/08/eBird_Taxonomy_v2019.csv");
 
 bool TaxonomyOrder::Parse(const std::string& fileName)
 {
+	if (!std::filesystem::exists(fileName))
+	{
+		if (!DownloadTaxonomyFile(fileName))
+		{
+			errorString = "Failed to download the taxonomy file";
+			return false;
+		}
+	}
+	
 	std::ifstream file(fileName);
 	if (!file.good())
 	{
@@ -123,5 +136,21 @@ void TaxonomyOrder::Trim(std::string& s)
 bool TaxonomyOrder::ParseToken(const std::string& s, std::string& value)
 {
 	value = s;
+	return true;
+}
+
+bool TaxonomyOrder::DownloadTaxonomyFile(const std::string& saveTo)
+{
+	HTMLRetriever retriever(userAgent, std::chrono::steady_clock::duration(0));
+	std::string fileContents;
+	if (!retriever.GetHTML(taxonomyFileURL, fileContents))
+		return false;
+
+	std::ofstream file(saveTo);
+	if (!file.good())
+		return false;
+		
+	file << fileContents;
+
 	return true;
 }
