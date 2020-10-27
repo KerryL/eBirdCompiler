@@ -65,11 +65,42 @@ void MainFrame::SetProperties()
 BEGIN_EVENT_TABLE(MainFrame, wxFrame)
 	EVT_BUTTON(idButtonUpdate,			MainFrame::ButtonUpdateClickedEvent)
 	EVT_TEXT(idChecklistTextChange,		MainFrame::ChecklistTextChangeEvent)
+	EVT_COMMAND(wxID_ANY, THREAD_COMPLETE_EVENT, MainFrame::OnThreadCompleteEvent)
 END_EVENT_TABLE();
+
+void MainFrame::UpdateThreadEntry()
+{
+	wxCommandEvent event(THREAD_COMPLETE_EVENT);
+	if (compiler.Update(checklistTextBox->GetValue().ToStdString()))
+		event.SetInt(1);
+	else
+		event.SetInt(0);
+		
+	wxPostEvent(this, event);
+}
 
 void MainFrame::ButtonUpdateClickedEvent(wxCommandEvent& WXUNUSED(event))
 {
-	if (!compiler.Update(checklistTextBox->GetValue().ToStdString()))
+	windowDisabler = std::make_unique<wxWindowDisabler>();
+	busyInfo = std::make_unique<wxBusyInfo>(_T("Gathering checklist data..."));
+	
+	updateThread = std::thread(&MainFrame::UpdateThreadEntry, this);
+	updateButton->Enable(false);
+}
+
+void MainFrame::ChecklistTextChangeEvent(wxCommandEvent& WXUNUSED(event))
+{
+	updateButton->Enable();
+}
+
+void MainFrame::OnThreadCompleteEvent(wxCommandEvent& event)
+{
+	busyInfo.reset();
+	windowDisabler.reset();
+	if (updateThread.joinable())
+		updateThread.join();
+	
+	if (event.GetInt() == 0)
 		wxMessageBox(compiler.GetErrorString(), _T("Error"));
 	else
 	{
@@ -77,11 +108,4 @@ void MainFrame::ButtonUpdateClickedEvent(wxCommandEvent& WXUNUSED(event))
 		if (!compiler.GetErrorString().empty())
 			wxMessageBox(compiler.GetErrorString(), _T("Warning"));
 	}
-		
-	updateButton->Enable(false);
-}
-
-void MainFrame::ChecklistTextChangeEvent(wxCommandEvent& WXUNUSED(event))
-{
-	updateButton->Enable();
 }

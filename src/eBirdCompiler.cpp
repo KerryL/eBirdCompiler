@@ -122,7 +122,7 @@ bool EBirdCompiler::Update(const std::string& checklistString)
 	if (!allSameDate)
 		errorString = "Not all checklists are from the same date";
 
-	// If there are many checklists and only a small number are from a different date, identify those checklists.
+	// TODO:  If there are many checklists and only a small number are from a different date, identify those checklists.
 	
 	return true;
 }
@@ -137,10 +137,11 @@ std::string EBirdCompiler::GetSummaryString() const
 	const unsigned int timeMin(summary.totalTime - timeHour * 60.0);
 		
 	std::ostringstream ss;
+	ss.precision(1);
 	ss << "\nParticipants:    " << summary.participants.size();
 	if (summary.includesMoreThanOneAnonymousUser)
 		ss << " (participant count may be inexact due to anonymous checklists)";
-	ss << "\nTotal distance:  " << summary.totalDistance * 0.621371 << " miles"
+	ss << "\nTotal distance:  " << std::fixed << summary.totalDistance * 0.621371 << " miles"
 		<< "\nTotal time:      ";
 	if (timeHour > 0)
 	{
