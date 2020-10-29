@@ -30,7 +30,10 @@ bool EBirdCompiler::Update(const std::string& checklistString)
 	std::string url;
 	std::istringstream ss(checklistString);
 	while (std::getline(ss, url))
-		urlList.insert(url);
+	{
+		if (!url.empty())// TODO:  More sophisticated check?  If not URL?  Or if just checklist ID, build out the full URL?
+			urlList.insert(url);
+	}
 		
 	if (urlList.empty())
 	{
