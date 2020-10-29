@@ -13,6 +13,11 @@
 #include <fstream>
 #include <algorithm>
 #include <filesystem>
+#include <cctype>
+
+#if defined(_MSC_VER) && _MSC_VER < 1914
+#define filesystem experimental::filesystem
+#endif
 
 const std::string TaxonomyOrder::taxonomyFileURL("https://www.birds.cornell.edu/clementschecklist/wp-content/uploads/2019/08/eBird_Taxonomy_v2019.csv");
 

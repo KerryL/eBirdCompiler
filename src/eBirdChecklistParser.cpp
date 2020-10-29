@@ -9,6 +9,7 @@
 
 // Standard C++ headers
 #include <sstream>
+#include <algorithm>
 
 bool EBirdChecklistParser::Parse(const std::string& html, ChecklistInfo& info)
 {

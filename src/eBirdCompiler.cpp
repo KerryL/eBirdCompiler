@@ -133,8 +133,8 @@ std::string EBirdCompiler::GetSummaryString() const
 	for (const auto& s : summary.species)
 		totalIndividuals += s.count;
 		
-	const unsigned int timeHour(floor(summary.totalTime / 60.0));
-	const unsigned int timeMin(summary.totalTime - timeHour * 60.0);
+	const unsigned int timeHour(static_cast<unsigned int>(floor(summary.totalTime / 60.0)));
+	const unsigned int timeMin(static_cast<unsigned int>(summary.totalTime - timeHour * 60.0));
 		
 	std::ostringstream ss;
 	ss.precision(1);
