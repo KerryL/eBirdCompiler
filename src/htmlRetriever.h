@@ -19,10 +19,12 @@
 class HTMLRetriever
 {
 public:
-	HTMLRetriever(const std::string& userAgent, const std::chrono::steady_clock::duration& crawlDelay);
+	HTMLRetriever(const std::string& userAgent, const std::chrono::steady_clock::duration& crawlDelay = std::chrono::steady_clock::duration(0));
 	~HTMLRetriever();
 	
 	bool GetHTML(const std::string& url, std::string& html);
+	void SetCrawlDelay(const std::chrono::steady_clock::duration& crawlDelay) { rateLimiter.SetMinAccessDelta(crawlDelay); }
+	std::string GetUserAgent() const { return userAgent; }
 
 protected:
 	const std::string userAgent;

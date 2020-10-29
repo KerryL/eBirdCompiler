@@ -6,26 +6,24 @@
 #ifndef ROBOTS_PARSER_H_
 #define ROBOTS_PARSER_H_
 
-// Local headers
-#include "htmlRetriever.h"
-
 // Standard C++ headers
 #include <chrono>
 #include <string>
 
-// for cURL
-typedef void CURL;
+// Local forward declarations
+class HTMLRetriever;
 
-class RobotsParser : public HTMLRetriever
+class RobotsParser
 {
 public:
-	RobotsParser(const std::string& userAgent, const std::string& baseURL);
+	RobotsParser(HTMLRetriever& htmlRetriever, const std::string& baseURL);
 	bool RetrieveRobotsTxt();
 	std::chrono::steady_clock::duration GetCrawlDelay() const;
 	
 	static std::string GetBaseURL(std::string url);
 
 private:
+	HTMLRetriever& htmlRetriever;
 	const std::string& baseURL;
 
 	std::string robotsTxt;

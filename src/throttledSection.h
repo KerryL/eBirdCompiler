@@ -15,10 +15,11 @@ class ThrottledSection
 public:
 	typedef std::chrono::steady_clock Clock;
 	ThrottledSection(const Clock::duration& minAccessDelta);
+	void SetMinAccessDelta(const Clock::duration& newMinAccessDelta) { minAccessDelta = newMinAccessDelta; }
 	void Wait();
 
 private:
-	const Clock::duration minAccessDelta;
+	Clock::duration minAccessDelta;
 	Clock::time_point lastAccess = Clock::now();
 	std::mutex mutex;
 };

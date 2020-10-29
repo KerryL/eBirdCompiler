@@ -5,6 +5,7 @@
 
 // Local headers
 #include "robotsParser.h"
+#include "htmlRetriever.h"
 
 // Standard C++ headers
 #include <sstream>
@@ -12,8 +13,8 @@
 const std::string RobotsParser::robotsFileName("robots.txt");
 
 // TODO:  This is realy basic - it assumes we're only interested in the crawl delay.  We should fix this...
-RobotsParser::RobotsParser(const std::string& userAgent, const std::string& baseURL)
-	: HTMLRetriever(userAgent, std::chrono::steady_clock::duration(0)), baseURL(baseURL)
+RobotsParser::RobotsParser(HTMLRetriever& htmlRetriever, const std::string& baseURL)
+	: htmlRetriever(htmlRetriever), baseURL(baseURL)
 {
 }
 
@@ -40,7 +41,7 @@ bool RobotsParser::RetrieveRobotsTxt()
 	if (fullURL.back() != '/')
 		fullURL.append("/");
 
-	if (!DoCURLGet(fullURL + robotsFileName, robotsTxt))
+	if (!htmlRetriever.GetHTML(fullURL + robotsFileName, robotsTxt))
 		return false;
 	return true;
 }
@@ -62,7 +63,7 @@ std::chrono::steady_clock::duration RobotsParser::GetCrawlDelay() const
 			continue;
 		else if (line.find(userAgentTag) != std::string::npos)
 		{
-			if (line.find(userAgent) != std::string::npos ||
+			if (line.find(htmlRetriever.GetUserAgent()) != std::string::npos ||
 				line.find("*") != std::string::npos)
 				theseRulesApply = true;
 			else

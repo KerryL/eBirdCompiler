@@ -48,15 +48,17 @@ bool EBirdCompiler::Update(const std::string& checklistString)
 		return false;
 	}
 	
+	HTMLRetriever htmlClient(userAgent);
+	
 	const auto baseURL(RobotsParser::GetBaseURL(*urlList.begin()));
-	RobotsParser robotsTxtParser(userAgent, baseURL);
+	RobotsParser robotsTxtParser(htmlClient, baseURL);
 	std::chrono::steady_clock::duration crawlDelay;
 	if (robotsTxtParser.RetrieveRobotsTxt())
 		crawlDelay = robotsTxtParser.GetCrawlDelay();
 	else
 		crawlDelay = std::chrono::seconds(1);// Default value
 	
-	HTMLRetriever htmlClient(userAgent, crawlDelay);
+	htmlClient.SetCrawlDelay(crawlDelay);
 	std::vector<ChecklistInfo> checklistInfo;
 	for (const auto& u : urlList)
 	{
