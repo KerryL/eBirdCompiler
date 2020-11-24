@@ -30,10 +30,10 @@ void MainFrame::CreateControls()
 	updateButton = new wxButton(panel, idButtonUpdate, _T("Update Summary"));
 	updateButton->Enable(false);
 	summaryTextBox = new wxTextCtrl(panel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(800, 500), wxTE_MULTILINE | wxTE_READONLY | wxTE_RICH);
-	
-	wxTextAttr summaryStyle;
-	summaryStyle.SetFontFamily(wxFONTFAMILY_MODERN);
-	summaryTextBox->SetDefaultStyle(summaryStyle);
+
+	auto font(summaryTextBox->GetFont());
+	font.SetFamily(wxFONTFAMILY_MODERN);
+	summaryTextBox->SetFont(font);
 	
 	mainSizer->Add(new wxStaticText(panel, wxID_ANY, _T("Enter checklist URLs:")), wxSizerFlags().Border(wxALL, 5));
 	mainSizer->Add(checklistTextBox, wxSizerFlags().Expand().Border(wxALL, 5));
