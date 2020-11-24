@@ -5,4 +5,6 @@ This application works by parsing eBird checklist web pages.  This is convenient
 
 Some features, like summing the number of participants and individual counts are unreliable, also due to the weak interface.  Still, it can be a handy tool for quickly summarizing tallies from multiple eBird Checklists.
 
+To use it, paste eBird checklist URLs into the upper text control, one URL on each line.  Then click "Update Summary" to generate a combined list of observations.
+
 The code is Copyright 2020 Kerry Loux and is licensed under the MIT license (see LICENSE file for details).
