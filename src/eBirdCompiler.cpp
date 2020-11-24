@@ -29,9 +29,11 @@ bool EBirdCompiler::Update(const std::string& checklistString)
 	std::set<std::string> urlList;
 	std::string url;
 	std::istringstream ss(checklistString);
-	while (std::getline(ss, url))
+	while (ss >> url)
 	{
-		if (!url.empty())// TODO:  More sophisticated check?  If not URL?  Or if just checklist ID, build out the full URL?
+		if (url.find("ebird.org/") == std::string::npos && url.front() == 'S')// Allow checkilist IDs to be used and generate full URL automatically
+			urlList.insert("https://ebird.org/checklist/" + url);
+		else if (!url.empty())
 			urlList.insert(url);
 	}
 		
