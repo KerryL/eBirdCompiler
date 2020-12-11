@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <cctype>
+#include <iomanip>
 
 #if defined(_MSC_VER) && _MSC_VER < 1914
 #define filesystem experimental::filesystem
@@ -84,63 +85,104 @@ bool TaxonomyOrder::ParseLine(std::string line, TaxaInfo& info)
 	Trim(line);
 	std::istringstream ss(line);
 	std::string token;
-	if (!std::getline(ss, token, ',') || !ParseToken(token, info.sequence))
+	if (!GetNextToken(ss, token) || !ParseToken(token, info.sequence))
 		return false;
 		
-	if (!std::getline(ss, token, ',') || !ParseToken(token, info.category))
+	if (!GetNextToken(ss, token) || !ParseToken(token, info.category))
 		return false;
 		
-	if (!std::getline(ss, token, ',') || !ParseToken(token, info.speciesCode))
+	if (!GetNextToken(ss, token) || !ParseToken(token, info.speciesCode))
 		return false;
 		
-	if (!std::getline(ss, token, ',') || !ParseToken(token, info.commonName))
+	if (!GetNextToken(ss, token) || !ParseToken(token, info.commonName))
 		return false;
 
-	// TODO:  Implement the rest of this - species group can have commas, so need to also parse the quotes
-	/*if (!std::getline(ss, token, ',') || !ParseToken(token, info.scientificName))
+	if (!GetNextToken(ss, token) || !ParseToken(token, info.scientificName))
 		return false;
 		
-	if (!std::getline(ss, token, ',') || !ParseToken(token, info.order))
+	if (!GetNextToken(ss, token) || !ParseToken(token, info.order))
 		return false;
 		
-	if (!std::getline(ss, token, ',') || !ParseToken(token, info.family))
+	if (!GetNextToken(ss, token) || !ParseToken(token, info.family))
 		return false;
 		
-	if (!std::getline(ss, token, ',') || !ParseToken(token, info.speciesGroup))
+	if (!GetNextToken(ss, token) || !ParseToken(token, info.speciesGroup))
 		return false;
 		
-	if (!std::getline(ss, token, ',') || !ParseToken(token, info.reportAs))
-		return false;*/
+	GetNextToken(ss, token);// Don't return if the last one fails - it just means the token is blank
+	if (!ParseToken(token, info.reportAs))
+		return false;
 		
 	return true;
 }
 
-bool TaxonomyOrder::HeaderMatches(const std::string& headerLine)
+bool TaxonomyOrder::GetNextToken(std::istringstream& ss, std::string& token)
 {
-	std::string trimmedHeader(headerLine);
-	Trim(trimmedHeader);
-	trimmedHeader = trimmedHeader.substr(3);// TODO:  Fix this - need a real solution
-	// This didn't seem helpful, but I wonder if it's on the right track:
-	// //#include <codecvt>std::locale::global(std::locale(std::locale::empty(), new std::codecvt_utf8<wchar_t>));
-	const std::string expectedHeader("TAXON_ORDER,CATEGORY,SPECIES_CODE,PRIMARY_COM_NAME,SCI_NAME,ORDER1,FAMILY,SPECIES_GROUP,REPORT_AS");
-	return trimmedHeader == expectedHeader;
+	ss >> std::ws;// Discard leading whitespace
+	if (ss.peek() == '"')// Process quoted string
+	{
+		ss >> std::quoted(token);
+	}
+	
+	return !std::getline(ss, token, ',').fail();
 }
 
-void TaxonomyOrder::Trim(std::string& s)
+bool TaxonomyOrder::HeaderMatches(std::string& headerLine)
 {
-	s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
-        return !std::isspace(ch);
-    }));
-    
-    s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch)
-    {
-        return !std::isspace(ch);
-    }).base(), s.end());
+	// For some reason, the eBird taxonomy file starts with three negative-valued characters, which seem to be ignored by text editors.
+	// We'll ignore them here, too, along with any whitespace characters (this works to remove trailing whitespace, like \r, which is
+	// included in the line, but we can only use it here because we know the expected line doesn't contain any whitespace).
+	headerLine.erase(std::remove_if(headerLine.begin(), headerLine.end(), [](const std::string::value_type& c)
+	{
+		if (static_cast<int>(c) < 0 || std::isspace(c))
+			return true;
+		return false;
+	}), headerLine.end());
+	
+	const std::string expectedHeader("TAXON_ORDER,CATEGORY,SPECIES_CODE,PRIMARY_COM_NAME,SCI_NAME,ORDER1,FAMILY,SPECIES_GROUP,REPORT_AS");
+	return headerLine == expectedHeader;
 }
 
 bool TaxonomyOrder::ParseToken(const std::string& s, std::string& value)
 {
 	value = s;
+	return true;
+}
+
+void TaxonomyOrder::Trim(std::string& s)
+{
+	s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](const unsigned char& ch)
+	{
+		return !std::isspace(ch);
+	}));
+	
+	s.erase(std::find_if(s.rbegin(), s.rend(), [](const unsigned int &ch)
+	{
+		return !std::isspace(ch);
+	}).base(), s.end());
+}
+
+bool TaxonomyOrder::ParseToken(const std::string& s, TaxaInfo::Category& value)
+{
+	if (s == "species")
+		value = TaxaInfo::Category::Species;
+	else if (s == "hybrid")
+		value = TaxaInfo::Category::Hybrid;
+	else if (s == "spuh")
+		value = TaxaInfo::Category::Spuh;
+	else if (s == "slash")
+		value = TaxaInfo::Category::Slash;
+	else if (s == "issf")
+		value = TaxaInfo::Category::IdentifiableSubSpecificGroup;
+	else if (s == "intergrade")
+		value = TaxaInfo::Category::Intergrade;
+	else if (s == "domestic")
+		value = TaxaInfo::Category::Domestic;
+	else if (s == "form")
+		value = TaxaInfo::Category::Form;
+	else
+		return false;
+
 	return true;
 }
 

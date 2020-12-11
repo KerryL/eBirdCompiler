@@ -31,8 +31,20 @@ private:
 
 	struct TaxaInfo
 	{
+		enum class Category
+		{
+			Species,
+			Hybrid,
+			Spuh,
+			Slash,
+			IdentifiableSubSpecificGroup,
+			Intergrade,
+			Domestic,
+			Form
+		};
+	
 		unsigned int sequence;
-		std::string category;// TODO:  Make enum
+		Category category;
 		std::string speciesCode;
 		std::string commonName;
 		std::string scientificName;
@@ -45,13 +57,15 @@ private:
 	std::vector<TaxaInfo> taxaInfo;
 	
 	bool ParseLine(std::string line, TaxaInfo& info);
-	bool HeaderMatches(const std::string& headerLine);
+	static bool HeaderMatches(std::string& headerLine);
 	
 	template <typename T>
 	bool ParseToken(const std::string& s, T& value);
 	bool ParseToken(const std::string& s, std::string& value);
+	bool ParseToken(const std::string& s, TaxaInfo::Category& value);
 	
 	static void Trim(std::string& s);
+	static bool GetNextToken(std::istringstream& ss, std::string& token);
 	
 	bool DownloadTaxonomyFile(const std::string& saveTo);
 };
