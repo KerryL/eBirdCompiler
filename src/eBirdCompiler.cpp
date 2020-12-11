@@ -171,7 +171,18 @@ std::string EBirdCompiler::GetSummaryString() const
 	for (const auto& s : summary.species)
 		maxNameLength = std::max(maxNameLength, s.name.length());
 		
-	const unsigned int extraSpace(7);// Extra space must be longer than max expected count size (TODO:  Automate this)
+	const unsigned int extraSpace([this]()
+	{
+		unsigned int maxLength(0);
+		for (const auto& s : summary.species)
+		{
+			const unsigned int length(log10(s.count) + 1);
+			if (length > maxLength)
+				maxLength = length;
+		}
+		return maxLength + 3;// Three extra spaces to make it look nice
+	}());
+	
 	ss << "Species list:\n";
 	// TODO:  When we print the final list, should we remove subspecies info again?
 	for (const auto& s : summary.species)
