@@ -1,0 +1,13 @@
+// File:  eBirdCompiler.rc
+// Date:  12/12/2020
+// Auth:  K. Loux
+// Desc:  Resorce definitions for eBirdCompiler application.
+
+// Main application icon (MUST be first alphabetically)
+ICON_ID_MAIN			ICON		"res\\icons\\compiler.ico"
+
+// wxWidgets definitions
+#define wxUSE_NO_MANIFEST 1
+
+// wxWidgets resource files (MUST come at the end of the list)
+#include <wx\msw\wx.rc>

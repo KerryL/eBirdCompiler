@@ -7,6 +7,16 @@
 #include "mainFrame.h"
 #include "eBirdCompilerApp.h"
 
+// *nix Icons
+#ifdef __WXGTK__
+#include "../res/icons/compiler16.xpm"
+#include "../res/icons/compiler24.xpm"
+#include "../res/icons/compiler32.xpm"
+#include "../res/icons/compiler48.xpm"
+#include "../res/icons/compiler64.xpm"
+#include "../res/icons/compiler128.xpm"
+#endif// __WXGTK__
+
 MainFrame::MainFrame() : wxFrame(nullptr, wxID_ANY, wxEmptyString,
 	wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE)
 {
@@ -50,16 +60,16 @@ void MainFrame::SetProperties()
 	SetName(EBirdCompilerApp::name);
 	Center();
 
-/*#ifdef __WXMSW__
+#ifdef __WXMSW__
 	SetIcon(wxIcon(_T("ICON_ID_MAIN"), wxBITMAP_TYPE_ICO_RESOURCE));
 #elif __WXGTK__
-	SetIcon(wxIcon(plots16_xpm));
-	SetIcon(wxIcon(plots24_xpm));
-	SetIcon(wxIcon(plots32_xpm));
-	SetIcon(wxIcon(plots48_xpm));
-	SetIcon(wxIcon(plots64_xpm));
-	SetIcon(wxIcon(plots128_xpm));
-#endif*/
+	SetIcon(wxIcon(compiler16_xpm));
+	SetIcon(wxIcon(compiler24_xpm));
+	SetIcon(wxIcon(compiler32_xpm));
+	SetIcon(wxIcon(compiler48_xpm));
+	SetIcon(wxIcon(compiler64_xpm));
+	SetIcon(wxIcon(compiler128_xpm));
+#endif
 }
 
 BEGIN_EVENT_TABLE(MainFrame, wxFrame)
