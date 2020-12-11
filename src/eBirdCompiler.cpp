@@ -120,7 +120,8 @@ bool EBirdCompiler::Update(const std::string& checklistString)
 				summary.species.push_back(checklistSpecies);
 		}
 	}
-	
+
+	RemoveSubspeciesFromSummary();
 	SortTaxonomically(summary.species);
 	
 	summary.includesMoreThanOneAnonymousUser = anonUserCount > 1;
@@ -184,7 +185,6 @@ std::string EBirdCompiler::GetSummaryString() const
 	}());
 	
 	ss << "Species list:\n";
-	// TODO:  When we print the final list, should we remove subspecies info again?
 	for (const auto& s : summary.species)
 	{
 		ss << "  " << s.name << std::setw(maxNameLength + extraSpace - s.name.length()) << std::setfill(' ');
@@ -252,4 +252,23 @@ void EBirdCompiler::SortTaxonomically(std::vector<SpeciesInfo>& species)
 	});
 	
 	std::sort(species.begin(), species.end(), sortPredicate);
+}
+
+void EBirdCompiler::RemoveSubspeciesFromSummary()
+{
+	for (auto& s : summary.species)
+		s.name = StripSubspecies(s.name);
+		
+	for (unsigned int i = 0; i < summary.species.size(); ++i)
+	{
+		for (unsigned int j = i + 1; j < summary.species.size(); ++j)
+		{
+			if (summary.species[i].name == summary.species[j].name)
+			{
+				summary.species[i].count += summary.species[j].count;
+				summary.species.erase(summary.species.begin() + j);
+				--j;
+			}
+		}
+	}
 }

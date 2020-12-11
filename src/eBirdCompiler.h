@@ -48,6 +48,8 @@ private:
 	
 	SummaryInfo summary;
 	
+	void RemoveSubspeciesFromSummary();
+	
 	static unsigned int GetDateCode(const ChecklistInfo& info);
 	static void CountSpecies(const std::vector<SpeciesInfo>& species, unsigned int& speciesCount, unsigned int& otherTaxaCount);
 	static std::string StripSubspecies(const std::string& name);
