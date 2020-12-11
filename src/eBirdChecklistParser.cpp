@@ -45,7 +45,8 @@ bool EBirdChecklistParser::Parse(const std::string& html, ChecklistInfo& info)
 	{
 		if (!ExtractDuration(html, position, info.duration))
 		{
-			errorString = "Failed to find duration";
+			if (errorString.empty())
+				errorString = "Failed to find duration";
 			return false;
 		}
 	}
@@ -56,7 +57,8 @@ bool EBirdChecklistParser::Parse(const std::string& html, ChecklistInfo& info)
 	{
 		if (!ExtractDistance(html, position, info.distance))
 		{
-			errorString = "Failed to find distance";
+			if (errorString.empty())
+				errorString = "Failed to find distance";
 			return false;
 		}
 	}
@@ -184,7 +186,10 @@ bool EBirdChecklistParser::ExtractDuration(const std::string& html, std::string:
 	else if (ss.peek() == 'm')
 		duration = value;
 	else
-		return false;// TODO:  Better messaging?
+	{
+		errorString = "Unexpected character while parsing duration units";
+		return false;
+	}
 
 	return true;
 }
@@ -208,7 +213,10 @@ bool EBirdChecklistParser::ExtractDistance(const std::string& html, std::string:
 	else if (ss.peek() == 'k')
 		distance = value;
 	else
-		return false;// TODO:  Better messaging?
+	{
+		errorString = "Unexpected character while parsing distance units";
+		return false;
+	}
 
 	return true;
 }
@@ -237,7 +245,7 @@ bool EBirdChecklistParser::ExtractSpeciesList(const std::string& html, std::stri
 	if (!MoveToEndOfTag(html, listStartTag, position))
 		return false;
 
-	// TODO:  Would be good to have a check for the same event being entered as multiple checklists (i.e. participant A + particpant B)
+	// TODO:  Would be good to have a check for the same event being entered as multiple checklists (i.e. participant A + particpant B) or more than once
 		
 	const std::string listEndTag("</main>");
 	const auto listEndPosition(html.find(listEndTag, position));
