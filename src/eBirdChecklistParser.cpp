@@ -14,6 +14,12 @@
 bool EBirdChecklistParser::Parse(const std::string& html, ChecklistInfo& info)
 {
 	std::string::size_type position(0);
+	if (!ExtractIdentifier(html, position, info.identifier))
+	{
+		errorString = "Failed to find identifier";
+		return false;
+	}
+	
 	if (!ExtractDate(html, position, info))
 	{
 		errorString = "Failed to find date";
@@ -72,6 +78,13 @@ bool EBirdChecklistParser::Parse(const std::string& html, ChecklistInfo& info)
 	}
 
 	return true;
+}
+
+bool EBirdChecklistParser::ExtractIdentifier(const std::string& html, std::string::size_type& position, std::string& identifier)
+{
+	const std::string identifierTagStart("<h1 role=\"heading\" class=\"Heading Heading--h6 Heading--minor u-stack-sm\">Checklist ");
+	const std::string tagEnd("</h1>");
+	return ExtractTextBetweenTags(html, identifierTagStart, tagEnd, identifier, position);
 }
 
 bool EBirdChecklistParser::ExtractDate(const std::string& html, std::string::size_type& position, ChecklistInfo& info)

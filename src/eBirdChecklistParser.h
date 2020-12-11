@@ -18,6 +18,7 @@ class TaxonomyOrder;
 
 struct ChecklistInfo
 {
+	std::string identifier;
 	std::vector<std::string> birders;
 	std::string location;
 	double distance;// [km]
@@ -51,6 +52,7 @@ private:
 		Other
 	};
 	
+	bool ExtractIdentifier(const std::string& html, std::string::size_type& position, std::string& identifier);
 	bool ExtractDate(const std::string& html, std::string::size_type& position, ChecklistInfo& info);
 	bool ExtractLocation(const std::string& html, std::string::size_type& position, std::string& location);
 	bool ExtractBirders(const std::string& html, std::string::size_type& position, std::vector<std::string>& birders);

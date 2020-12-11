@@ -17,16 +17,18 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <map>
 
 const std::string EBirdCompiler::userAgent("eBird Compiler");
 const std::string EBirdCompiler::taxonFileName("eBird_Taxonomy_v2019.csv");
 
+#include <iostream>
 bool EBirdCompiler::Update(const std::string& checklistString)
 {
 	errorString.clear();
 	summary = SummaryInfo();
 	
-	std::set<std::string> urlList;
+	std::set<std::string> urlList;// Use set to avoid duplicates
 	std::string url;
 	std::istringstream ss(checklistString);
 	while (ss >> url)
@@ -82,15 +84,14 @@ bool EBirdCompiler::Update(const std::string& checklistString)
 
 	std::set<std::string> locationSet;
 	unsigned int anonUserCount(0);
-	const auto dateCode(GetDateCode(checklistInfo.front()));
-	bool allSameDate(true);
+	std::map<unsigned int, std::vector<std::string>> checklistsByDateCode;
 	for (const auto& ci : checklistInfo)
 	{
 		summary.totalDistance += ci.distance;
 		summary.totalTime += ci.duration;
 		
-		if (GetDateCode(ci) != dateCode)
-			allSameDate = false;
+		const auto dateCode(GetDateCode(ci));
+		checklistsByDateCode[dateCode].push_back(ci.identifier);
 		
 		for (const auto& b : ci.birders)
 		{
@@ -127,10 +128,40 @@ bool EBirdCompiler::Update(const std::string& checklistString)
 	summary.includesMoreThanOneAnonymousUser = anonUserCount > 1;
 	summary.locationCount = locationSet.size();
 	
-	if (!allSameDate)
-		errorString = "Not all checklists are from the same date";
-
-	// TODO:  If there are many checklists and only a small number are from a different date, identify those checklists.
+	if (checklistsByDateCode.size() > 1)
+	{
+		// Try to be helpful about reporting these potential errors:
+		// - If there is a date code that includes > 80% of the checklists, identify the checklists that make up the 20%
+		// - Otherwise, report the number of checklists given for each date
+		for (const auto& cl : checklistsByDateCode)
+		{
+			if (cl.second.size() > 0.8 * checklistInfo.size())
+			{
+				std::ostringstream ss;
+				ss << "The following checklists are not from the same date as the others:\n";
+				for (const auto& cl2 : checklistsByDateCode)
+				{
+					if (cl2.first != cl.first)
+					{
+						for (const auto &id : cl2.second)
+							ss << id << '\n';
+					}
+				}
+				
+				errorString = ss.str();
+				break;
+			}
+		}
+		
+		if (errorString.empty())
+		{
+			std::ostringstream ss;
+			ss << "Not all checklists are from the same date:\n";
+			for (const auto& cl : checklistsByDateCode)
+				ss << GetDateFromCode(cl.first) << " - " << cl.second.size() << " checklists\n";
+			errorString = ss.str();
+		}
+	}
 	
 	return true;
 }
@@ -204,6 +235,16 @@ unsigned int EBirdCompiler::GetDateCode(const ChecklistInfo& info)
 	assert(info.day > 0 && info.day <= 31);
 	assert(info.year > 1700);
 	return (info.year - 1700) + info.month * 1000 + info.day * 100000;
+}
+
+std::string EBirdCompiler::GetDateFromCode(const unsigned int& code)
+{
+	const unsigned int day(code / 100000);
+	const unsigned int month((code - day * 100000) / 1000);
+	const unsigned int year(code - day * 100000 - month * 1000 + 1700);
+	std::ostringstream ss;
+	ss << month << '/' << day << '/' << year;
+	return ss.str();
 }
 
 void EBirdCompiler::CountSpecies(const std::vector<SpeciesInfo>& species, unsigned int& speciesCount, unsigned int& otherTaxaCount)
