@@ -82,7 +82,7 @@ bool EBirdChecklistParser::Parse(const std::string& html, ChecklistInfo& info)
 
 bool EBirdChecklistParser::ExtractIdentifier(const std::string& html, std::string::size_type& position, std::string& identifier)
 {
-	const std::string identifierTagStart("<h1 role=\"heading\" class=\"Heading Heading--h6 Heading--minor u-stack-sm\">Checklist ");
+	const std::string identifierTagStart("<h1 id=\"content\" role=\"heading\" class=\"Heading Heading--h6 Heading--minor u-stack-sm\">Checklist ");
 	const std::string tagEnd("</h1>");
 	return ExtractTextBetweenTags(html, identifierTagStart, tagEnd, identifier, position);
 }
@@ -107,7 +107,7 @@ bool EBirdChecklistParser::ExtractDate(const std::string& html, std::string::siz
 
 bool EBirdChecklistParser::ExtractLocation(const std::string& html, std::string::size_type& position, std::string& location)
 {
-	const std::string locationTag("<h6 class=\"is-visuallyHidden\">Location</h6>");
+	const std::string locationTag("<span class=\"is-visuallyHidden\">Location</span>");
 	if (!MoveToEndOfTag(html, locationTag, position))
 		return false;
 
@@ -130,7 +130,7 @@ bool EBirdChecklistParser::ExtractBirders(const std::string& html, std::string::
 	birders.push_back(token);
 	
 	// Check to see if we have additional birders
-	const std::string additionalBirdersTag("<span class=\"Heading-main is-visuallyHidden\">Other participating eBirders</span>");
+	const std::string additionalBirdersTag("<h4 class=\"is-visuallyHidden\">Other participating eBirders</h4>");
 	if (!MoveToEndOfTag(html, additionalBirdersTag, position))
 		return true;// Not an error
 		
@@ -152,7 +152,7 @@ bool EBirdChecklistParser::ExtractBirders(const std::string& html, std::string::
 
 bool EBirdChecklistParser::ExtractProtocol(const std::string& html, std::string::size_type& position, Protocol& protocol)
 {
-	const std::string protocolStartTag("<span class=\"Heading-main u-inline-sm\" title=\"Protocol: ");
+	const std::string protocolStartTag("<div class=\"Heading Heading--h5 u-margin-none u-inline-xs\" title=\"Protocol: ");
 	const std::string endTag("\">");
 	std::string token;
 	if (!ExtractTextBetweenTags(html, protocolStartTag, endTag, token, position))
@@ -252,21 +252,43 @@ bool EBirdChecklistParser::ExtractTextBetweenTags(const std::string& html, const
 	return true;
 }
 
+std::string::size_type EBirdChecklistParser::FindEndTag(const std::string& html, std::string::size_type position, const std::string& tag)
+{
+	unsigned int depth(0);
+	std::string::size_type nextStart, nextEnd;
+	while (nextStart = html.find("<" + tag, position), nextEnd = html.find("</" + tag, position), nextEnd != std::string::npos)
+	{
+		if (nextStart < nextEnd)
+		{
+			position = nextStart + 1;
+			++depth;
+		}
+		else if (depth > 0)
+		{
+			position = nextEnd + 1;
+			--depth;
+		}
+		else
+			return nextEnd;
+	}
+	
+	return std::string::npos;
+}
+
 bool EBirdChecklistParser::ExtractSpeciesList(const std::string& html, std::string::size_type& position, std::vector<SpeciesInfo>& species)
 {
-	const std::string listStartTag("<main id=\"list\">");
+	const std::string listStartTag("<div id=\"list\">");
 	if (!MoveToEndOfTag(html, listStartTag, position))
 		return false;
 
 	// TODO:  Would be good to have a check for the same event being entered as multiple checklists (i.e. participant A + particpant B) or more than once
-		
-	const std::string listEndTag("</main>");
-	const auto listEndPosition(html.find(listEndTag, position));
+
+	const auto listEndPosition(FindEndTag(html, position, "div"));
 	if (listEndPosition == std::string::npos)
 		return false;
 		
 	std::vector<std::vector<SpeciesInfo>> lists;
-	const std::string additionalSpeciesTag("<h5 class=\"Heading Heading--h5 Heading--minor\" data-observationheading>Additional species");
+	const std::string additionalSpeciesTag("<h2 id=\"observations-others\" class=\"Heading Heading--h5 Heading--minor\" data-observationheading>Additional species");
 	std::string::size_type nextListStart;
 
 	do
@@ -304,7 +326,7 @@ bool EBirdChecklistParser::ExtractSpeciesInfo(const std::string& html, std::stri
 	if (!taxonomy.GetTaxonomicSequence(info.name, info.taxonomicOrder))
 		return false;
 		
-	const std::string countStartTag("<span class=\"is-visuallyHidden\">Number observed: </span>");
+	const std::string countStartTag("<span class=\"is-visuallyHidden\">Number observed:&nbsp;</span>");
 	if (!MoveToEndOfTag(html, countStartTag, position, maxPosition))
 		return false;
 

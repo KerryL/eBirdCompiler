@@ -64,6 +64,7 @@ private:
 	
 	static bool ExtractTextBetweenTags(const std::string& html, const std::string& startTag, const std::string& endTag, std::string& token, std::string::size_type& position, const std::string::size_type& maxPosition = std::string::npos);
 	static bool MoveToEndOfTag(const std::string& html, const std::string& tag, std::string::size_type& position, const std::string::size_type& maxPosition = std::string::npos);
+	static std::string::size_type FindEndTag(const std::string& html, std::string::size_type position, const std::string& tag);
 	
 	static std::vector<SpeciesInfo> MergeLists(const std::vector<std::vector<SpeciesInfo>>& lists);
 };
